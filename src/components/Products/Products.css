@@ -1,0 +1,23 @@
+.product{
+    display: flex;
+    margin-left: 15%;
+    border-bottom: 1px solid lightblue;
+    padding: 15px;
+
+}
+.product-detail{
+    margin-left: 45px;
+    width: 60%;
+
+}
+
+.add-to-cart-btn{
+    background-color: goldenrod;
+    padding: 0px 45px;
+    border: 1px solid white;
+    border-radius: 5px;
+    height: 30px;
+    font-weight: 750;
+    cursor: pointer;
+    
+}
