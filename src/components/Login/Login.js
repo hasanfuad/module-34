@@ -1,15 +1,19 @@
-
-import firebase from "firebase/app";
-
-import "firebase/auth";
-import firebaseConfig from "../../firebaseConfig";
 import { useContext, useState } from "react";
 import { UserContext } from "../../App";
+import { useHistory, useLocation } from "react-router-dom";
 
-firebase.initializeApp(firebaseConfig);
+import {
+  createUserWithEmailAndPassword,
+  frameworkForLoginInitialize,
+  handleGoogleSignIn,
+  handleSignOutBtn,
+  signInWithEmailAndPassword,
+  updateUserName,
+} from "./LoginManager";
 
 function Login() {
-  const provider = new firebase.auth.GoogleAuthProvider();
+  frameworkForLoginInitialize();
+  updateUserName();
 
   const [newUser, setNewUser] = useState(false);
   const [user, setUser] = useState({
@@ -22,35 +26,24 @@ function Login() {
   });
 
   const [loggedInUser, setLoggedInUser] = useContext(UserContext);
+  const history = useHistory();
+  const location = useLocation();
 
-  const handleSignInBtn = () => {
-    firebase
-      .auth()
-      .signInWithPopup(provider)
-      .then((res) => {
-        console.log(res);
-        const { displayName, email } = res.user;
-        const userInfo = {
-          isSignedIn: true,
-          displayName: displayName,
-          email: email,
-        };
-        setUser(userInfo);
-      });
+  let { from } = location.state || { from: { pathname: "/" } };
+
+  const googleSignIn = () => {
+    handleGoogleSignIn().then((res) => {
+      setUser(res);
+      setLoggedInUser(res);
+      history.replace(from);
+    });
   };
 
-  const handleSignOutBtn = () => {
-    firebase
-      .auth()
-      .signOut()
-      .then(() => {
-        const userSignOut = {
-          isSignedIn: false,
-          name: "",
-          email: "",
-        };
-        setUser(userSignOut);
-      });
+  const signOutBtn = () => {
+    handleSignOutBtn().then((res) => {
+      setUser(res);
+      setLoggedInUser(res);
+    });
   };
 
   const handleForm = (e) => {
@@ -76,60 +69,28 @@ function Login() {
 
   const handleSubmit = (e) => {
     if (newUser && user.email && user.password) {
-      firebase
-        .auth()
-        .createUserWithEmailAndPassword(user.email, user.password)
-        .then((userCredential) => {
-          const newUserInfo = { ...user };
-          newUserInfo.success = "New user successfully created!";
-          setUser(newUserInfo);
-          console.log('Sign in user info', userCredential.user);
-        })
-        .catch((error) => {
-          const newUserInfo = { ...user };
-          newUserInfo.error = error.message;
-          setUser(newUserInfo);
-        });
+      createUserWithEmailAndPassword(user.name, user.email, user.password).then(
+        (res) => {
+          setUser(res);
+          setLoggedInUser(res);
+          history.replace(from);
+        }
+      );
     }
 
     if (!newUser && user.email && user.password) {
-      firebase
-        .auth()
-        .signInWithEmailAndPassword(user.email, user.password)
-        .then((userCredential) => {
-          const newUserInfo = { ...user };
-          newUserInfo.success = "New user successfully login!";
-          setUser(newUserInfo);
-          setLoggedInUser(newUserInfo);
-        })
-        .catch((error) => {
-          const newUserInfo = { ...user };
-          newUserInfo.error = error.message;
-          setUser(newUserInfo);
-          updateUserName(user.name);
-        });
+      signInWithEmailAndPassword(user.email, user.password).then((res) => {
+        setUser(res);
+        setLoggedInUser(res);
+        history.replace(from);
+      });
     }
 
     e.preventDefault();
   };
 
-  const updateUserName = (name) => {
-    const user = firebase.auth().currentUser;
-
-    user
-      .updateProfile({
-        displayName: name,
-      })
-      .then((res) => {
-        console.log("successfully updated info",res);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
   return (
-    <div style={{textAlign: 'center'}}>
+    <div style={{ textAlign: "center" }}>
       {user.isSignedIn && (
         <div>
           <h2>Welcome Mr. {user.displayName.toUpperCase()}</h2>
@@ -137,9 +98,9 @@ function Login() {
         </div>
       )}
       {user.isSignedIn ? (
-        <button onClick={handleSignOutBtn}>Sign Out</button>
+        <button onClick={signOutBtn}>Sign Out</button>
       ) : (
-        <button onClick={handleSignInBtn}>Sign In</button>
+        <button onClick={googleSignIn}>Sign In with google</button>
       )}
 
       {user.success ? (
@@ -182,7 +143,7 @@ function Login() {
           required
         />
         <br />
-        <input type="submit" value={newUser ? 'Sign Up' : 'Sign In'} />
+        <input type="submit" value={newUser ? "Sign Up" : "Sign In"} />
       </form>
     </div>
   );
