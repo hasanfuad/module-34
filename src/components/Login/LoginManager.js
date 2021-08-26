@@ -73,7 +73,7 @@ export const signInWithEmailAndPassword = (email, password) => {
     });
 };
 
-export const updateUserName = (name) => {
+ const updateUserName = (name) => {
   const user = firebase.auth().currentUser;
 
   user

@@ -8,12 +8,12 @@ import {
   handleGoogleSignIn,
   handleSignOutBtn,
   signInWithEmailAndPassword,
-  updateUserName,
+  //   updateUserName,
 } from "./LoginManager";
 
 function Login() {
   frameworkForLoginInitialize();
-  updateUserName();
+  //   updateUserName();
 
   const [newUser, setNewUser] = useState(false);
   const [user, setUser] = useState({
@@ -33,16 +33,13 @@ function Login() {
 
   const googleSignIn = () => {
     handleGoogleSignIn().then((res) => {
-      setUser(res);
-      setLoggedInUser(res);
-      history.replace(from);
+      handleResponse(res, true)
     });
   };
 
   const signOutBtn = () => {
     handleSignOutBtn().then((res) => {
-      setUser(res);
-      setLoggedInUser(res);
+      handleResponse(res, false);
     });
   };
 
@@ -71,22 +68,26 @@ function Login() {
     if (newUser && user.email && user.password) {
       createUserWithEmailAndPassword(user.name, user.email, user.password).then(
         (res) => {
-          setUser(res);
-          setLoggedInUser(res);
-          history.replace(from);
+          handleResponse(res, true);
         }
       );
     }
 
     if (!newUser && user.email && user.password) {
       signInWithEmailAndPassword(user.email, user.password).then((res) => {
-        setUser(res);
-        setLoggedInUser(res);
-        history.replace(from);
+        handleResponse(res, true);
       });
     }
 
     e.preventDefault();
+  };
+
+  const handleResponse = (res, redirect) => {
+    setUser(res);
+    setLoggedInUser(res);
+    if (redirect) {
+      history.replace(from);
+    }
   };
 
   return (
